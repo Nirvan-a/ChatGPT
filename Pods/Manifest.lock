@@ -1,0 +1,20 @@
+PODS:
+  - EasyStash (1.1.7)
+  - SnapKit (5.6.0)
+
+DEPENDENCIES:
+  - EasyStash
+  - SnapKit (~> 5.6.0)
+
+SPEC REPOS:
+  https://github.com/CocoaPods/Specs.git:
+    - EasyStash
+    - SnapKit
+
+SPEC CHECKSUMS:
+  EasyStash: 29813c9bca4ace671c86d932b3acffe91d6c4e43
+  SnapKit: e01d52ebb8ddbc333eefe2132acf85c8227d9c25
+
+PODFILE CHECKSUM: 877f5fcadf5a81ee31884d794140f18cf8f2814b
+
+COCOAPODS: 1.11.3
