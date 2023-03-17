@@ -36,7 +36,7 @@ class ChatGPTAPI {
         let jsonBody: [String: Any] = [
             "model": "gpt-3.5-turbo",
             "messages": historyMessages,
-            "temperature": 0.4,
+            "temperature": 1.2,
             "max_tokens": 1024,
             "stream": stream
         ]

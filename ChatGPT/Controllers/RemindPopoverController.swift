@@ -60,11 +60,9 @@ class RemindPopverController: UIViewController {
         return label
     }()
         
-    override func viewDidLoad() {
-    }
-    
     init(width: CGFloat) {
         self.init()
+        
         popwindowWidth = width
         
         let attributedString1 = NSMutableAttributedString(
@@ -89,6 +87,10 @@ class RemindPopverController: UIViewController {
         contentHeight2 = attributedString2.height(with: width - 20)
         popWindowHeight = titleHeight1 + titleHeight2 + contentHeight1 + contentHeight2 + 50
         
+        setupViews()
+    }
+    
+    private func setupViews() {
         view.addSubview(titleLabel1)
         view.addSubview(titleLabel2)
         view.addSubview(contentLabel1)
@@ -118,8 +120,8 @@ class RemindPopverController: UIViewController {
             make.trailing.equalToSuperview().offset(-10)
             make.height.equalTo(contentHeight2)
         }
-        
     }
+    
     
     override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)

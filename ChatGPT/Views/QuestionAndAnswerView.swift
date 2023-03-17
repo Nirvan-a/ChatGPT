@@ -14,7 +14,6 @@ class QuestionAndAnswerView: UIView {
     var totalHeight: CGFloat {
         max(questionTextHeight,30) + max(answerTextHeight,30) + 75
     }
-    
     var questionTextHeight: CGFloat = 0
     var answerTextHeight: CGFloat = 0
     
@@ -40,7 +39,6 @@ class QuestionAndAnswerView: UIView {
         textView.backgroundColor = .clear
         return textView
     }()
-    
     
     lazy var answerView: UIView = {
         var view = UIView()
@@ -93,17 +91,6 @@ class QuestionAndAnswerView: UIView {
         setUpUI()
     }
     
-    func updateUI(answerText: String) {
-        answerTextHeight = answerText.height(withFont: .boldSystemFont(ofSize: 17), maximumWidth: ChatDefinedFrame.screenWidth - 77)
-        answerView.snp.updateConstraints { make in
-            make.height.equalTo(max(answerTextHeight,30) + 45)
-        }
-        answerTextView.snp.updateConstraints { make in
-            make.height.equalTo(answerTextHeight)
-        }
-        answerTextView.text = answerText
-    }
-    
     func stopDotAnimination() {
         dotLoadingView.stopAnimating()
         dotLoadingView.isHidden = true
@@ -129,6 +116,7 @@ class QuestionAndAnswerView: UIView {
         errorLabel.font = .boldSystemFont(ofSize: 17)
         errorLabel.textAlignment = .center
         errorLabel.isUserInteractionEnabled = true
+        
         DispatchQueue.main.async {[weak self] in
             guard let strongSelf = self else { return }
             strongSelf.stopDotAnimination()
@@ -146,6 +134,17 @@ class QuestionAndAnswerView: UIView {
         errorLabel.isHidden = true
         reStartDotAnimination()
         retryClosure?()
+    }
+    
+    func updateUI(answerText: String) {
+        answerTextHeight = answerText.height(withFont: .boldSystemFont(ofSize: 17), maximumWidth: ChatDefinedFrame.screenWidth - 77)
+        answerView.snp.updateConstraints { make in
+            make.height.equalTo(max(answerTextHeight,30) + 45)
+        }
+        answerTextView.snp.updateConstraints { make in
+            make.height.equalTo(answerTextHeight)
+        }
+        answerTextView.text = answerText
     }
     
     private func setUpUI() {

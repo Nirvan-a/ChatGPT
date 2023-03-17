@@ -3,15 +3,6 @@
 //  ChatGPT
 //
 //  Created by nirvana on 3/5/23.
-//
-
-///逻辑梳理：
-///1. Controller为mainView:bgView/titleView/ScrollView/bottomView
-///2. ScrollView: 装载自定义questionAndAnswerCells
-///3. bottomView: 装载自定义textView
-///4. Controller基于此实现更新整体UI框架
-///5. functionHelper 提供请求相关功能+更新附带UI / 设置持久化
-///6. bottomAlertVC 为setting
 
 import UIKit
 import SnapKit
@@ -22,7 +13,7 @@ class ChatGPTMainViewController: UIViewController, UITextViewDelegate {
     
     var functionHelper: FunctionHelper = FunctionHelper()
     
-    //UI逻辑:
+    //UI:
     var sampleCell1:QuestionAndAnswerView? = nil
     var sampleCell2:QuestionAndAnswerView? = nil
     
@@ -49,6 +40,8 @@ class ChatGPTMainViewController: UIViewController, UITextViewDelegate {
             bottomView.snp.updateConstraints { make in
                 make.bottom.equalToSuperview().offset(-bottomViewOffset)
             }
+            fullScrollView.setNeedsLayout()
+            fullScrollView.layoutIfNeeded()
         }
     }
     
@@ -132,11 +125,13 @@ class ChatGPTMainViewController: UIViewController, UITextViewDelegate {
         return line
     }()
     
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        do { locadSavedModel = try functionHelper.loadSettingModel()}
-        catch {}
+        if let savedModel = try? functionHelper.loadSettingModel() {
+            locadSavedModel = savedModel
+        }
         functionHelper.api.apiKey = locadSavedModel.apiKey
         
         setUpViews()
@@ -150,46 +145,86 @@ class ChatGPTMainViewController: UIViewController, UITextViewDelegate {
     
     override func viewDidAppear(_ animated: Bool) {
         if locadSavedModel.apiKey.isEmpty {
-            let cell = QuestionAndAnswerView(
-                questionText: "(Here are sample text and style) Hello, how can I start using this app?",
-                questionColor: locadSavedModel.questionColor,
-                answerText: "Oh, it's easy. If you can't send a message right now, it means you didn't enter your APIKey. Just go to Settings, enter and save.",
-                answerColor: locadSavedModel.answerColor,
-                proImage: locadSavedModel.proFile,
-                botImage: locadSavedModel.robotFile)
-            cell.stopDotAnimination()
-            let cell2 = QuestionAndAnswerView(
-                questionText: "I see, but what is my APIKey",
-                questionColor: locadSavedModel.questionColor,
-                answerText: "Haha, I knew you were going to ask this. Just go to Settings, there are instructions, and in a few simple steps you can get your APIKey and we'll have fun.",
-                answerColor: locadSavedModel.answerColor,
-                proImage: locadSavedModel.proFile,
-                botImage: locadSavedModel.robotFile)
-            cell2.stopDotAnimination()
-            scrollContent.addSubview(cell)
-            scrollContent.addSubview(cell2)
-            cell.snp.makeConstraints { make in
-                make.leading.trailing.top.equalToSuperview()
-                make.height.equalTo(cell.totalHeight)
-                make.bottom.equalTo(scrollContent.snp.bottom)
-            }
-            cell2.snp.makeConstraints { make in
-                make.top.equalTo(cell.snp.bottom)
-                make.leading.trailing.equalToSuperview()
-                make.height.equalTo(cell2.totalHeight)
-                sizeConstraint = make.bottom.equalTo(scrollContent.snp.bottom).constraint
-            }
-            sampleCell1 = cell
-            sampleCell2 = cell2
-            
-            textView.isUserInteractionEnabled = false
-            textView.text = "Enter APIKey first."
+            initiateSampleCell()
             openSetting()
         }
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         removeKeyBoardObserver()
+    }
+    
+    
+    private func addActions() {
+        textView.delegate = self
+        functionHelper.delegate = self
+        
+        sendIcon.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(sendRequest)))
+    }
+    
+    @objc func sendRequest() {
+        
+        guard iconShouldEnable, let question = textView.text else { return }
+        
+        iconShouldEnable = false
+        inputValid = false
+        
+        let cell = QuestionAndAnswerView(
+            questionText: "\(question)",
+            questionColor: locadSavedModel.questionColor,
+            answerText: "Loading...",
+            answerColor: locadSavedModel.answerColor,
+            proImage: locadSavedModel.proFile,
+            botImage: locadSavedModel.robotFile)
+        scrollContent.addSubview(cell)
+        
+        if questionAndAnswerCells.count == 0 {
+            cell.snp.makeConstraints { make in
+                make.leading.trailing.top.equalToSuperview()
+                make.height.equalTo(cell.totalHeight)
+                sizeConstraint = make.bottom.equalTo(scrollContent.snp.bottom).constraint
+            }
+        } else {
+            if let view = questionAndAnswerCells.last {
+                
+                sizeConstraint?.deactivate()
+                
+                cell.snp.makeConstraints { make in
+                    make.top.equalTo(view.snp.bottom)
+                    make.leading.trailing.equalToSuperview()
+                    make.height.equalTo(cell.totalHeight)
+                    sizeConstraint = make.bottom.equalTo(scrollContent.snp.bottom).constraint
+                }
+            }
+        }
+        questionAndAnswerCells.append(cell)
+        
+        if bottomViewOffset == ChatDefinedFrame.safeBottomHeight {
+            textView.text = "Please wait a moment."
+            textView.textColor = .lightGray
+            textView.contentSize.height = 40
+            bottomView.snp.updateConstraints { make in
+                make.height.equalTo(56)
+            }
+            fullScrollView.setNeedsLayout()
+            fullScrollView.layoutIfNeeded()
+            self.fullScrollView.setContentOffset(CGPoint(x: 0, y: max(0,(scrollContent.frame.height - fullScrollView.frame.height))), animated: true)
+        } else {
+            textView.resignFirstResponder()
+            textView.text = "Please wait a moment."
+            self.fullScrollView.setContentOffset(CGPoint(x: 0, y: max(0,(scrollContent.frame.height - fullScrollView.frame.height))), animated: true)
+        }
+        textView.isUserInteractionEnabled = false
+        
+        Task {
+            await functionHelper.sendRequestAndUpdateCell(inputText: question,cell: cell) { [weak self] in
+                guard let strongSelf = self else { return }
+                DispatchQueue.main.async {
+                    strongSelf.textView.isUserInteractionEnabled = true
+                    strongSelf.textView.text = "Send message here."
+                }
+            }
+        }
     }
     
     @objc private func openSetting() {
@@ -255,24 +290,6 @@ class ChatGPTMainViewController: UIViewController, UITextViewDelegate {
         self.present(vc, animated: true)
     }
     
-    private func addKeyBoardObserver() {
-        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillAppear(notification:)), name: UIResponder.keyboardWillShowNotification, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(keyboardHide(_:)), name: UIResponder.keyboardWillHideNotification, object: nil)
-    }
-    private func removeKeyBoardObserver() {
-        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillShowNotification, object: nil)
-        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillHideNotification, object: nil)
-    }
-    
-    private func addActions() {
-        addKeyBoardObserver()
-        
-        textView.delegate = self
-        functionHelper.delegate = self
-        
-        sendIcon.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(sendRequest)))
-    }
-    
     func textViewDidBeginEditing(_ textView: UITextView) {
         //输入框状态
         if !iconShouldEnable && textView.text == "Send message here." {
@@ -297,6 +314,16 @@ class ChatGPTMainViewController: UIViewController, UITextViewDelegate {
         }
     }
     
+    private func addKeyBoardObserver() {
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillAppear(notification:)), name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardHide(_:)), name: UIResponder.keyboardWillHideNotification, object: nil)
+    }
+    private func removeKeyBoardObserver() {
+        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillHideNotification, object: nil)
+    }
+    
+    
     @objc func keyboardWillAppear(notification: NSNotification) {
         settingButton.isUserInteractionEnabled = false
         settingButton.alpha = 0.3
@@ -306,8 +333,8 @@ class ChatGPTMainViewController: UIViewController, UITextViewDelegate {
         
         bottomViewOffset = keyboardheight
         
-        let bottomOffset = CGPoint(x: 0,y: max(0, scrollContent.frame.height - fullScrollView.frame.height + keyboardheight - ChatDefinedFrame.safeBottomHeight))
-        fullScrollView.setContentOffset(bottomOffset, animated: true)
+        let bottomOffset = CGPoint(x: 0,y: max(0,(scrollContent.frame.height - fullScrollView.frame.height)))
+        self.fullScrollView.setContentOffset(bottomOffset, animated: false)
         
     }
     
@@ -325,67 +352,41 @@ class ChatGPTMainViewController: UIViewController, UITextViewDelegate {
         bottomViewOffset = ChatDefinedFrame.safeBottomHeight
     }
     
-    @objc func sendRequest() {
-        
-        guard iconShouldEnable, let question = textView.text else { return }
-        
-        iconShouldEnable = false
-        inputValid = false
-        
+    private func initiateSampleCell() {
         let cell = QuestionAndAnswerView(
-            questionText: "\(question)",
+            questionText: "(Here are sample text and style) Hello, how can I start using this app?",
             questionColor: locadSavedModel.questionColor,
-            answerText: "Loading...",
+            answerText: "Oh, it's easy. If you can't send a message right now, it means you didn't enter your APIKey. Just go to Settings, enter and save.",
             answerColor: locadSavedModel.answerColor,
             proImage: locadSavedModel.proFile,
             botImage: locadSavedModel.robotFile)
+        cell.stopDotAnimination()
+        let cell2 = QuestionAndAnswerView(
+            questionText: "I see, but what is my APIKey",
+            questionColor: locadSavedModel.questionColor,
+            answerText: "Haha, I knew you were going to ask this. Just go to Settings, there are instructions, and in a few simple steps you can get your APIKey and we'll have fun.",
+            answerColor: locadSavedModel.answerColor,
+            proImage: locadSavedModel.proFile,
+            botImage: locadSavedModel.robotFile)
+        cell2.stopDotAnimination()
         scrollContent.addSubview(cell)
-        
-        if questionAndAnswerCells.count == 0 {
-            cell.snp.makeConstraints { make in
-                make.leading.trailing.top.equalToSuperview()
-                make.height.equalTo(cell.totalHeight)
-                sizeConstraint = make.bottom.equalTo(scrollContent.snp.bottom).constraint
-            }
-        } else {
-            if let view = questionAndAnswerCells.last {
-                
-                sizeConstraint?.deactivate()
-                
-                cell.snp.makeConstraints { make in
-                    make.top.equalTo(view.snp.bottom)
-                    make.leading.trailing.equalToSuperview()
-                    make.height.equalTo(cell.totalHeight)
-                    sizeConstraint = make.bottom.equalTo(scrollContent.snp.bottom).constraint
-                }
-            }
+        scrollContent.addSubview(cell2)
+        cell.snp.makeConstraints { make in
+            make.leading.trailing.top.equalToSuperview()
+            make.height.equalTo(cell.totalHeight)
+            make.bottom.equalTo(scrollContent.snp.bottom)
         }
-        questionAndAnswerCells.append(cell)
-        
-        if bottomViewOffset == ChatDefinedFrame.safeBottomHeight {
-            textView.text = "Please wait a moment."
-            textView.textColor = .lightGray
-            textView.contentSize.height = 40
-            bottomView.snp.updateConstraints { make in
-                make.height.equalTo(56)
-            }
-            fullScrollView.setContentOffset(CGPoint(x: 0, y: scrollContent.frame.height), animated: false)
-        } else {
-            textView.resignFirstResponder()
-            textView.text = "Please wait a moment."
-            fullScrollView.setContentOffset(CGPoint(x: 0, y: scrollContent.frame.height), animated: false)
-            
+        cell2.snp.makeConstraints { make in
+            make.top.equalTo(cell.snp.bottom)
+            make.leading.trailing.equalToSuperview()
+            make.height.equalTo(cell2.totalHeight)
+            sizeConstraint = make.bottom.equalTo(scrollContent.snp.bottom).constraint
         }
+        sampleCell1 = cell
+        sampleCell2 = cell2
+        
         textView.isUserInteractionEnabled = false
-        Task {
-            await functionHelper.sendRequestAndUpdateCell(inputText: question,cell: cell) { [weak self] in
-                guard let strongSelf = self else { return }
-                DispatchQueue.main.async {
-                    strongSelf.textView.isUserInteractionEnabled = true
-                    strongSelf.textView.text = "Send message here."
-                }
-            }
-        }
+        textView.text = "Enter APIKey first."
     }
     
     private func setUpViews() {

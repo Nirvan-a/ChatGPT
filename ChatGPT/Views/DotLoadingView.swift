@@ -21,22 +21,6 @@ class DotLoadingView: UIView {
         setupDotLayers()
     }
     
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
-        setupDotLayers()
-    }
-    
-    private func setupDotLayers() {
-        for i in 0..<dotCount {
-            let dotLayer = CALayer()
-            dotLayer.frame = CGRect(x: CGFloat(i) * (dotSize + dotSpacing), y: 0, width: dotSize, height: dotSize)
-            dotLayer.cornerRadius = dotSize / 3
-            dotLayer.backgroundColor = UIColor.gray.cgColor
-            layer.addSublayer(dotLayer)
-            dotLayers.append(dotLayer)
-        }
-    }
-    
     func startAnimating() {
         let animation = CABasicAnimation(keyPath: "backgroundColor")
         animation.fromValue = UIColor.clear.cgColor
@@ -55,4 +39,19 @@ class DotLoadingView: UIView {
         dotLayers.forEach { $0.removeAllAnimations() }
     }
     
+    private func setupDotLayers() {
+        for i in 0..<dotCount {
+            let dotLayer = CALayer()
+            dotLayer.frame = CGRect(x: CGFloat(i) * (dotSize + dotSpacing), y: 0, width: dotSize, height: dotSize)
+            dotLayer.cornerRadius = dotSize / 3
+            dotLayer.backgroundColor = UIColor.gray.cgColor
+            layer.addSublayer(dotLayer)
+            dotLayers.append(dotLayer)
+        }
+    }
+    
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setupDotLayers()
+    }
 }

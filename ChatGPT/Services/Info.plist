@@ -4,7 +4,5 @@
 <dict>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Need library access to update background</string>
-	<key>NSCameraUsageDescription</key>
-	<string>Need camera access to update background</string>
 </dict>
 </plist>

@@ -72,6 +72,10 @@ class APIKeyLineView: UIView {
         super.init(frame: .zero)
         inputTextField.placeholder = api
 
+        setupViews()
+    }
+    
+    private func setupViews() {
         addSubview(apiLabel)
         addSubview(inputTextField)
         addSubview(remindIcon)
@@ -138,6 +142,22 @@ class ColorChooseView: UIView {
             button.addTarget(self, action: #selector(colorChoosed(_:)), for: .touchUpInside)
         }
         
+        setupViews(title)
+    }
+    
+    @objc func colorChoosed(_ sender: UIButton) {
+        for i in colorViewList {
+            if i === sender {
+                i.layer.borderColor = UIColor.black.cgColor
+            } else {
+                i.layer.borderColor = UIColor.clear.cgColor
+            }
+        }
+        updateSelect?(sender.backgroundColor ?? .clear)
+    }
+    
+    
+    private func setupViews(_ title: String) {
         addSubview(textLabel)
         addSubview(colorStack)
         colorStack.addArrangedSubview(colorButton1)
@@ -157,17 +177,6 @@ class ColorChooseView: UIView {
             make.trailing.equalToSuperview().offset(-10)
             make.leading.equalTo(textLabel.snp.trailing).offset(10)
         }
-    }
-    
-    @objc func colorChoosed(_ sender: UIButton) {
-        for i in colorViewList {
-            if i === sender {
-                i.layer.borderColor = UIColor.black.cgColor
-            } else {
-                i.layer.borderColor = UIColor.clear.cgColor
-            }
-        }
-        updateSelect?(sender.backgroundColor ?? .clear)
     }
     
     lazy var colorButton1: UIButton = {
@@ -292,31 +301,7 @@ class ChooseBgView: UIView {
         }
         addButton.addTarget(self, action: #selector(addImage(_:)), for: .touchUpInside)
         
-        addSubview(bgLabel)
-        addSubview(bgStack)
-        bgStack.addArrangedSubview(bgButto1)
-        bgStack.addArrangedSubview(bgButton2)
-        bgStack.addArrangedSubview(bgButton3)
-        bgStack.addArrangedSubview(bgButton4)
-        bgStack.addArrangedSubview(addButton)
-        
-        addButton.snp.makeConstraints { make in
-            make.height.width.equalTo(30)
-        }
-        
-        bgLabel.snp.makeConstraints { make in
-            make.top.leading.equalToSuperview()
-            make.height.equalTo(30)
-            make.width.equalTo("Background".width(withFont: .boldSystemFont(ofSize: 16)))
-        }
-        bgStack.snp.makeConstraints { make in
-            make.leading.equalTo(bgLabel.snp.trailing).offset(20)
-            make.top.equalToSuperview()
-            make.height.equalTo(60)
-            make.trailing.equalToSuperview().offset(-20)
-        }
-        
-        
+        setupViews()
     }
     
     @objc func bgSelectChoose(_ sender: UIButton) {
@@ -348,6 +333,32 @@ class ChooseBgView: UIView {
         addBGButtonTapped?(sender)
     }
     
+    private func setupViews() {
+        addSubview(bgLabel)
+        addSubview(bgStack)
+        bgStack.addArrangedSubview(bgButto1)
+        bgStack.addArrangedSubview(bgButton2)
+        bgStack.addArrangedSubview(bgButton3)
+        bgStack.addArrangedSubview(bgButton4)
+        bgStack.addArrangedSubview(addButton)
+        
+        addButton.snp.makeConstraints { make in
+            make.height.width.equalTo(30)
+        }
+        
+        bgLabel.snp.makeConstraints { make in
+            make.top.leading.equalToSuperview()
+            make.height.equalTo(30)
+            make.width.equalTo("Background".width(withFont: .boldSystemFont(ofSize: 16)))
+        }
+        bgStack.snp.makeConstraints { make in
+            make.leading.equalTo(bgLabel.snp.trailing).offset(20)
+            make.top.equalToSuperview()
+            make.height.equalTo(60)
+            make.trailing.equalToSuperview().offset(-20)
+        }
+    }
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -374,8 +385,6 @@ class ChooseProfileView: UIView {
     
     lazy var botfile: UILabel = {
         let label = UILabel()
-//        label.font = .boldSystemFont(ofSize: 16)
-//        label.text = "Botfile"
         return label
     }()
     lazy var botButton: UIButton = {
@@ -395,6 +404,14 @@ class ChooseProfileView: UIView {
     
     init() {
         super.init(frame: .zero)
+        setupViews()
+    }
+    
+    @objc func editImage(_ sender: UIButton) {
+        updateFilePicture?(sender)
+    }
+    
+    private func setupViews() {
         addSubview(profile)
         addSubview(profileButton)
         addSubview(botButton)
@@ -419,10 +436,6 @@ class ChooseProfileView: UIView {
         stack.addArrangedSubview(profileButton)
         stack.addArrangedSubview(botButton)
         stack.addArrangedSubview(botfile)
-    }
-    
-    @objc func editImage(_ sender: UIButton) {
-        updateFilePicture?(sender)
     }
     
     required init?(coder: NSCoder) {

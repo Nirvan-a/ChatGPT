@@ -114,8 +114,8 @@
 			isa = PBXGroup;
 			children = (
 				D8D2063029B40F6100BB3349 /* ChatGPTMainViewController.swift */,
-				D843893D29BDC68700D8966F /* BottomAlertViewController.swift */,
 				D83EAD4629BF38FD00DB9CE0 /* MainPresentAlertController.swift */,
+				D843893D29BDC68700D8966F /* BottomAlertViewController.swift */,
 				D83EAD4429BF385400DB9CE0 /* RemindPopoverController.swift */,
 			);
 			path = Controllers;

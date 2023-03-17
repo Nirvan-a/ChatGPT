@@ -11,6 +11,7 @@ class BottomAlertViewController: UIViewController, UITextFieldDelegate {
     var updataQuestionText: ((_ questionColor: UIColor)-> Void)?
     var updateAnswerText: ((_ questionColor: UIColor)-> Void)?
     var updateMainView: ((_ titleColor: UIColor, _ image: UIImage,_ isFromAddButton: (Bool,Int))-> Void)?
+    
     var callFromAddButtonOrEditButton = (true,0)
     var editButtonImage: UIImage = UIImage() {
         didSet {
@@ -21,6 +22,7 @@ class BottomAlertViewController: UIViewController, UITextFieldDelegate {
             }
         }
     }
+    
     var saveButtonTapped: ((_ apiKey: String)-> Void)?
     
     private lazy var closeButton: UIImageView = {
@@ -110,12 +112,59 @@ class BottomAlertViewController: UIViewController, UITextFieldDelegate {
         super.viewWillDisappear(animated)
         presentingViewController?.viewWillAppear(animated)
     }
+
+    @objc func remindButtonTapped(_ sender: UIButton) {
+        let remindVC = RemindPopverController(width: 330)
+        presentPopover(popover: remindVC, sender: sender, size: CGSize(width: remindVC.popwindowWidth, height: remindVC.popWindowHeight))
+    }
+    
+    @objc func saveButtonAction() {
+        self.dismiss(animated: true) { [weak self] in
+            guard let strongSelf = self else { return }
+            strongSelf.saveButtonTapped?(strongSelf.apiView.inputTextField.text ?? "")
+        }
+    }
+    
+    @objc func closeButtonClosed() {
+        self.dismiss(animated: true, completion: nil)
+    }
+
+    init(presentTransitionDelegate: UIViewControllerTransitioningDelegate, proImage: UIImage, botImage: UIImage, apiKey: String) {
+        self.init()
+        modalPresentationStyle = .custom
+        transitioningDelegate = presentTransitionDelegate
+        
+        self.chooseFilePicutre.profileButton.setImage(proImage, for: .normal)
+        self.chooseFilePicutre.botButton.setImage(botImage, for: .normal)
+        
+        if !apiKey.isEmpty {
+            self.apiView.inputTextField.text = apiKey
+        }
+    }
+    
+    override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
+        super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
+    }
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         apiView.inputTextField.resignFirstResponder()
     }
-
-    func setUpViews() {
+    
+    private func presentPopover(popover: RemindPopverController, sender: UIView, size: CGSize, arrowDirection: UIPopoverArrowDirection = .down) {
+        
+        let popoverViewController = popover
+        popoverViewController.modalPresentationStyle = .popover
+        popoverViewController.preferredContentSize = size
+        
+        let popoverPresentationController = popoverViewController.popoverPresentationController
+        popoverPresentationController?.permittedArrowDirections = arrowDirection
+        popoverPresentationController?.delegate = self
+        popoverPresentationController?.sourceView = sender
+        popoverPresentationController?.sourceRect = sender.bounds
+        self.present(popoverViewController, animated: true, completion: nil)
+    }
+    
+    private func setUpViews() {
         view.addSubview(titleLabel)
         view.addSubview(closeButton)
         view.bringSubviewToFront(closeButton)
@@ -125,7 +174,6 @@ class BottomAlertViewController: UIViewController, UITextFieldDelegate {
         view.addSubview(chooseBgPicture)
         view.addSubview(chooseFilePicutre)
         view.addSubview(saveButton)
-//        view.addSubview(resetButton)
         
         closeButton.snp.makeConstraints { make in
             make.trailing.equalTo(-20)
@@ -173,60 +221,7 @@ class BottomAlertViewController: UIViewController, UITextFieldDelegate {
             make.height.equalTo(45)
             make.top.equalTo(chooseFilePicutre.snp.bottom).offset(25)
         }
-//        resetButton.snp.makeConstraints { make in
-//            make.centerY.equalTo(saveButton)
-//            make.height.width.equalTo(30)
-//            make.trailing.equalTo(saveButton.snp.leading).offset(-10)
-//        }
         
-    }
-    
-    private func presentPopover(popover: RemindPopverController, sender: UIView, size: CGSize, arrowDirection: UIPopoverArrowDirection = .down) {
-        
-        let popoverViewController = popover
-        popoverViewController.modalPresentationStyle = .popover
-        popoverViewController.preferredContentSize = size
-        
-        let popoverPresentationController = popoverViewController.popoverPresentationController
-        popoverPresentationController?.permittedArrowDirections = arrowDirection
-        popoverPresentationController?.delegate = self
-        popoverPresentationController?.sourceView = sender
-        popoverPresentationController?.sourceRect = sender.bounds
-        self.present(popoverViewController, animated: true, completion: nil)
-    }
-
-    @objc func remindButtonTapped(_ sender: UIButton) {
-        let remindVC = RemindPopverController(width: 330)
-        presentPopover(popover: remindVC, sender: sender, size: CGSize(width: remindVC.popwindowWidth, height: remindVC.popWindowHeight))
-    }
-    
-    @objc func saveButtonAction() {
-        self.dismiss(animated: true) { [weak self] in
-            guard let strongSelf = self else { return }
-            strongSelf.saveButtonTapped?(strongSelf.apiView.inputTextField.text ?? "")
-        }
-    }
-
-    
-    @objc func closeButtonClosed() {
-        self.dismiss(animated: true, completion: nil)
-    }
-
-    init(presentTransitionDelegate: UIViewControllerTransitioningDelegate, proImage: UIImage, botImage: UIImage, apiKey: String) {
-        self.init()
-        modalPresentationStyle = .custom
-        transitioningDelegate = presentTransitionDelegate
-        
-        self.chooseFilePicutre.profileButton.setImage(proImage, for: .normal)
-        self.chooseFilePicutre.botButton.setImage(botImage, for: .normal)
-        
-        if !apiKey.isEmpty {
-            self.apiView.inputTextField.text = apiKey
-        }
-    }
-    
-    override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
-        super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
     }
 
     required init?(coder: NSCoder) {

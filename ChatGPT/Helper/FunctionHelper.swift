@@ -12,8 +12,8 @@ class FunctionHelper {
     
     var storage: Storage? = nil
     var textFieldclosure: (()-> Void)? = nil
+    var delegate: ChatGPTMainViewController? = nil
 
-    
     let api: ChatGPTAPI
     init() {
         self.api = ChatGPTAPI()
@@ -27,41 +27,14 @@ class FunctionHelper {
     private var tokenAmountLists: [Int] = []
     private var currentTokens = 0
     
-    var delegate: ChatGPTMainViewController? = nil
-    
-    
-    
     func sendRequestAndUpdateCell(inputText: String, cell: QuestionAndAnswerView, closure: (()->Void)?) async {
-        
         questionTokenAndHistory(inputText)
         textFieldclosure = closure
         await requestAndUpdateCell(inputText, cell)
     }
     
     func sendRequestAndUpdateCellWithoutStream(inputText: String, cell: QuestionAndAnswerView) async {
-        do {
-            questionTokenAndHistory(inputText)
-            
-            let message =  try await api.sendMessage(inputText)
-            updateCellAndScrollWithText(currentText: message, cell: cell)
-            
-            answerTokenAndHistory(message)
-            
-        } catch {
-            switch error {
-            case CustomError.responseUnexpected:
-                //Bad response: stateCode非正常
-                break
-            case CustomError.invalidResponse:
-                //Network lost: requestFailed
-                break
-            case CustomError.modelLoadError:
-                //Sorry,we are updating now...
-                break
-            default:
-                break
-            }
-        }
+        await requestAndUpdateCellWithoutStream(inputText, cell)
     }
     
     func saveSettingInfo(model: LocalSavedModel) {
@@ -170,6 +143,25 @@ class FunctionHelper {
         }
     }
     
+    private func requestAndUpdateCellWithoutStream(_ inputText: String, _ cell: QuestionAndAnswerView) async {
+        do {
+            questionTokenAndHistory(inputText)
+            
+            let message =  try await api.sendMessage(inputText)
+            updateCellAndScrollWithText(currentText: message, cell: cell)
+            
+            answerTokenAndHistory(message)
+            
+        } catch {
+            initErrorLabelAction(cell, inputText)
+            if let customError = error as? CustomError {
+                await cell.showNetWorkErrorText(error: customError)
+            } else {
+                await cell.showNetWorkErrorText(error: .defaultError)
+            }
+        }
+    }
+    
     private func updateCellAndScrollWithText(currentText: String, cell: QuestionAndAnswerView) {
         guard let mainController = delegate else { return }
         
@@ -181,9 +173,10 @@ class FunctionHelper {
             cell.snp.updateConstraints { make in
                 make.height.equalTo(cell.totalHeight)
             }
+            mainController.fullScrollView.setNeedsLayout()
+            mainController.fullScrollView.layoutIfNeeded()
             if cell.totalHeight != primHeight {
-                Thread.sleep(forTimeInterval: 0.3)
-                mainController.fullScrollView.setContentOffset(CGPoint(x: 0, y: mainController.scrollContent.frame.height), animated: false)
+                mainController.fullScrollView.setContentOffset(CGPoint(x: 0, y: max(0,(mainController.scrollContent.frame.height - mainController.fullScrollView.frame.height))),animated: true)
             }
         }
     }

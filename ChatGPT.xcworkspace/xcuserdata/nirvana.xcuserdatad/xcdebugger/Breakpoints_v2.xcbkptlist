@@ -53,32 +53,16 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "FB0A8130-CC93-4CBB-89FD-F57E94943213"
+            uuid = "ADB342F2-A992-40C7-B8F6-741A044C4E8B"
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "ChatGPT/Views/QuestionAndAnswerView.swift"
+            filePath = "ChatGPT/Controllers/ChatGPTMainViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "148"
-            endingLineNumber = "148"
-            landmarkName = "retryAction()"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "3C337A38-F49C-49EC-9C85-15C6AFBA668C"
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "ChatGPT/Views/QuestionAndAnswerView.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "145"
-            endingLineNumber = "145"
-            landmarkName = "retryAction()"
+            startingLineNumber = "327"
+            endingLineNumber = "327"
+            landmarkName = "keyboardWillAppear(notification:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

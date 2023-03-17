@@ -29,7 +29,7 @@ struct UsageResponse: Codable {
     let completion_tokens: Int?
     let total_tokens: Int?
 }
-//
+
 struct ReceivedResponseWithoutStream: Codable {
     let id: String?
     let object: String?
