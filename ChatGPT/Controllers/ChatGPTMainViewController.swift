@@ -61,7 +61,7 @@ class ChatGPTMainViewController: UIViewController, UITextViewDelegate {
     
     lazy var titleLabel: UILabel = {
         var label = UILabel()
-        label.text = "ChatGPT"
+        label.text = "AI-Chatbot"
         label.font = .boldSystemFont(ofSize: 30)
         label.textColor = UIColor(hexString: "#477a85")
         label.textAlignment = .center
